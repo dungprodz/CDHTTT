@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 
 @CrossOrigin("*")
 @RestController
-@RequestMapping("/zing/v1/register")
+@RequestMapping("/kma/v1/register")
 public class RegisterController {
     private final RegisterService registerService;
     @Autowired

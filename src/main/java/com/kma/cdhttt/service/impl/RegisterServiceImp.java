@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import java.sql.Timestamp;
 import java.util.UUID;
 
+import static com.kma.cdhttt.ulti.Validate.isPasswordValid;
+
 @Service
 public class RegisterServiceImp implements RegisterService {
     private final UserRepository userRepository;
@@ -33,6 +35,9 @@ public class RegisterServiceImp implements RegisterService {
                 || StringUtils.isEmpty(requestBody.getPhoneNumber()) || StringUtils.isEmpty(requestBody.getFullName())) {
             throw new Exception(ErrorCode.BAD_REQUEST);
         }
+        if(!isPasswordValid(requestBody.getPassWord())){
+            throw new Exception(ErrorCode.PASS_WORD_NOT_STRONG);
+        }
         if (userRepository.existsByUserName(requestBody.getUserName())) {
             throw new Exception(ErrorCode.USER_EXITS);
         }
@@ -42,9 +47,13 @@ public class RegisterServiceImp implements RegisterService {
         user.setUserName(requestBody.getUserName());
         user.setPassWord(passwordEncoder.encode(requestBody.getPassWord()));
         user.setStatus(Common.ACTIVE);
+        user.setEmail(requestBody.getEmail());
+        user.setFullName(requestBody.getFullName());
         user.setCreatedDate(new Timestamp(System.currentTimeMillis()));
         user.setPhoneNumber(requestBody.getPhoneNumber());
         user.setCreatedDate(new Timestamp(System.currentTimeMillis()));
+        user.setUpdateDate(new Timestamp(System.currentTimeMillis()));
+        user.setOtpCount("0");
         userRepository.save(user);
 
         responseBody.setStatus(Common.SUCCESS);
