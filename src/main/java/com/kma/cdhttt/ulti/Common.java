@@ -5,4 +5,5 @@ public interface Common {
     String FAIL = " FAIl";
     String ACTIVE= "ACTIVE";
     String HEADER_AUTHORIZATION = "Authorization";
+    String LOCK = " ACCOUNT_LOCK";
 }
