@@ -50,6 +50,9 @@ public class AuthenticationController {
                 user.setOtpCount("0");
                 userRepository.save(user);
             }
+            user.setOtpCount("0");
+            user.setUpdateDate(new Timestamp(System.currentTimeMillis()));
+            userRepository.save(user);
             final UserDetails userDetails = userService.loadUserByUsername(authenticationRequest.getUsername());
 
             final String token = jwtTokenUtil.generateToken(userDetails);
