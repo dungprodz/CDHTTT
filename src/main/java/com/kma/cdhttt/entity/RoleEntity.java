@@ -1,12 +1,14 @@
 package com.kma.cdhttt.entity;
 
+import org.springframework.security.core.GrantedAuthority;
+
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
 @Table(name = "role", schema = "ecommerce", catalog = "")
-public class RoleEntity {
+public class RoleEntity implements GrantedAuthority {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "ID")
@@ -75,5 +77,10 @@ public class RoleEntity {
     @Override
     public int hashCode() {
         return Objects.hash(id, roleId, roleName, createdDate, updatedDate);
+    }
+
+    @Override
+    public String getAuthority() {
+        return this.roleId;
     }
 }
