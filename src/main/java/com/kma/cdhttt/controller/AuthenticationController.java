@@ -1,6 +1,8 @@
 package com.kma.cdhttt.controller;
 
+import com.kma.cdhttt.entity.TokenEntity;
 import com.kma.cdhttt.entity.UserEntity;
+import com.kma.cdhttt.model.requestbody.CreateNewTokenRequestBody;
 import com.kma.cdhttt.model.requestbody.JwtLoginRequestBody;
 import com.kma.cdhttt.model.responsebody.JwtLoginResponseBody;
 import com.kma.cdhttt.repository.UserRepository;
@@ -57,8 +59,8 @@ public class AuthenticationController {
             final UserDetails userDetails = userService.loadUserByUsername(authenticationRequest.getUsername());
 
             final String token = jwtTokenUtil.generateToken(userDetails);
-
-            return ResponseEntity.ok(new JwtLoginResponseBody(token, Common.SUCCESS));
+            TokenEntity refreshToken = userService.createRefreshToken(userDetails, token);
+            return ResponseEntity.ok(new JwtLoginResponseBody(token, refreshToken, Common.SUCCESS));
         } catch (BadCredentialsException e) {
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
             if (Integer.parseInt(user.getOtpCount()) >= 5) {
@@ -69,6 +71,11 @@ public class AuthenticationController {
             userRepository.save(user);
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("mật khẩu sai hay thử lại");
         }
+    }
+
+    @PostMapping("/refreshToken")
+    public JwtLoginResponseBody refreshToken(@RequestBody CreateNewTokenRequestBody refreshTokenRequest) {
+        return userService.createNewToken(refreshTokenRequest);
     }
 
     private boolean isDifferenceGreaterThan30Minutes(Timestamp timestamp1, Timestamp timestamp2) {
