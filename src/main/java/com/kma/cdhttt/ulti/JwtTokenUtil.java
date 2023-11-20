@@ -71,7 +71,7 @@ public class JwtTokenUtil implements Serializable {
         List<String> roleList = userRoleRepository.findByUserId(user.getId()).stream().map(UserRoleEntity::getRoleId).collect(Collectors.toList());
         List<String> roleName = roleList.stream().map(item->roleRepository.findByRoleId(item).getRoleName()).collect(Collectors.toList());
         claims.put("role", roleName);
-        return doGenerateToken(claims, userDetails.getUsername(), roleList);
+        return doGenerateToken(claims, userDetails.getUsername());
     }
 
     //while creating the token -
@@ -79,7 +79,7 @@ public class JwtTokenUtil implements Serializable {
     //2. Sign the JWT using the HS512 algorithm and secret key.
     //3. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1)
     //   compaction of the JWT to a URL-safe string
-    private String doGenerateToken(Map<String, Object> claims, String subject, List<String> role) {
+    private String doGenerateToken(Map<String, Object> claims, String subject) {
 
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenExpireTime * 1000))
