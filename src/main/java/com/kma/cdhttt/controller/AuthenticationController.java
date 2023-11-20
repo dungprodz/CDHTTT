@@ -13,7 +13,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -24,7 +23,7 @@ import javax.validation.Valid;
 import java.sql.Timestamp;
 
 @RestController
-@CrossOrigin("*")
+@CrossOrigin("http://localhost:3000")
 @Slf4j
 @RequestMapping("/kma/v1/auth")
 public class AuthenticationController {
@@ -59,8 +58,15 @@ public class AuthenticationController {
             final UserDetails userDetails = userService.loadUserByUsername(authenticationRequest.getUsername());
 
             final String token = jwtTokenUtil.generateToken(userDetails);
+
             TokenEntity refreshToken = userService.createRefreshToken(userDetails, token);
-            return ResponseEntity.ok(new JwtLoginResponseBody(token, refreshToken, Common.SUCCESS));
+
+            JwtLoginResponseBody responseBody = JwtLoginResponseBody.builder()
+                    .jwttoken(token)
+                    .refreshToken(refreshToken.getRefreshToken())
+                    .status(Common.SUCCESS)
+                    .build();
+            return ResponseEntity.ok(responseBody);
         } catch (BadCredentialsException e) {
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
             if (Integer.parseInt(user.getOtpCount()) >= 5) {

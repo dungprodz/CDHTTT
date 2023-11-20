@@ -7,7 +7,7 @@ import java.sql.Timestamp;
 import java.util.Objects;
 
 @Entity
-@Table(name = "role", schema = "ecommerce", catalog = "")
+@Table(name = "role")
 public class RoleEntity implements GrantedAuthority {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
