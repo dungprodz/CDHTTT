@@ -1,18 +1,19 @@
 package com.kma.cdhttt.controller;
 
-import com.kma.cdhttt.entity.TokenEntity;
 import com.kma.cdhttt.entity.UserEntity;
-import com.kma.cdhttt.model.requestbody.CreateNewTokenRequestBody;
+import com.kma.cdhttt.model.ErrorResponse;
 import com.kma.cdhttt.model.requestbody.JwtLoginRequestBody;
 import com.kma.cdhttt.model.responsebody.JwtLoginResponseBody;
 import com.kma.cdhttt.repository.UserRepository;
 import com.kma.cdhttt.service.impl.JwtUserDetailsService;
 import com.kma.cdhttt.ulti.Common;
+import com.kma.cdhttt.ulti.ErrorCode;
 import com.kma.cdhttt.ulti.JwtTokenUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -23,7 +24,7 @@ import javax.validation.Valid;
 import java.sql.Timestamp;
 
 @RestController
-@CrossOrigin("http://localhost:3000")
+@CrossOrigin("*")
 @Slf4j
 @RequestMapping("/kma/v1/auth")
 public class AuthenticationController {
@@ -46,7 +47,10 @@ public class AuthenticationController {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
             if (Integer.parseInt(user.getOtpCount()) >= 5 && isDifferenceGreaterThan30Minutes(user.getUpdateDate(), new Timestamp(System.currentTimeMillis()))) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("bạn đã đăng nhập quá 5 lần, hãy thử lại sau 30 phút");
+                ErrorResponse response = new ErrorResponse();
+                response.setMessage("bạn đã đăng nhập quá 5 lần, hãy thử lại sau 30 phút");
+                response.setErrorCode(ErrorCode.ACCESS_DENIED);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             if (Integer.parseInt(user.getOtpCount()) >= 5 && !isDifferenceGreaterThan30Minutes(user.getUpdateDate(), new Timestamp(System.currentTimeMillis()))) {
                 user.setOtpCount("0");
@@ -59,29 +63,23 @@ public class AuthenticationController {
 
             final String token = jwtTokenUtil.generateToken(userDetails);
 
-            TokenEntity refreshToken = userService.createRefreshToken(userDetails, token);
-
-            JwtLoginResponseBody responseBody = JwtLoginResponseBody.builder()
-                    .jwttoken(token)
-                    .refreshToken(refreshToken.getRefreshToken())
-                    .status(Common.SUCCESS)
-                    .build();
-            return ResponseEntity.ok(responseBody);
+            return ResponseEntity.ok(new JwtLoginResponseBody(token, Common.SUCCESS));
         } catch (BadCredentialsException e) {
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
             if (Integer.parseInt(user.getOtpCount()) >= 5) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("bạn đã đăng nhập quá 5 lần, hãy thử lại sau 30 phút");
+                ErrorResponse response = new ErrorResponse();
+                response.setMessage("bạn đã đăng nhập quá 5 lần, hãy thử lại sau 30 phút");
+                response.setErrorCode(ErrorCode.ACCESS_DENIED);
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
             }
             user.setOtpCount(String.valueOf(Integer.parseInt(user.getOtpCount()) + 1));
             user.setUpdateDate(new Timestamp(System.currentTimeMillis()));
             userRepository.save(user);
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("mật khẩu sai hay thử lại");
+            ErrorResponse response = new ErrorResponse();
+            response.setMessage("mật khẩu sai hay thử lại");
+            response.setErrorCode(ErrorCode.ACCESS_DENIED);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
-    }
-
-    @PostMapping("/refreshToken")
-    public JwtLoginResponseBody refreshToken(@RequestBody CreateNewTokenRequestBody refreshTokenRequest) {
-        return userService.createNewToken(refreshTokenRequest);
     }
 
     private boolean isDifferenceGreaterThan30Minutes(Timestamp timestamp1, Timestamp timestamp2) {

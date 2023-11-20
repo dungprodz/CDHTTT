@@ -1,9 +1,13 @@
 package com.kma.cdhttt.service.impl;
 
+import com.kma.cdhttt.entity.RoleEntity;
 import com.kma.cdhttt.entity.UserEntity;
+import com.kma.cdhttt.entity.UserRoleEntity;
 import com.kma.cdhttt.model.requestbody.RegisterRequestBody;
 import com.kma.cdhttt.model.responsebody.RegisterResponseBody;
+import com.kma.cdhttt.repository.RoleRepository;
 import com.kma.cdhttt.repository.UserRepository;
+import com.kma.cdhttt.repository.UserRoleRepository;
 import com.kma.cdhttt.service.RegisterService;
 import com.kma.cdhttt.ulti.Common;
 import com.kma.cdhttt.ulti.ErrorCode;
@@ -23,11 +27,15 @@ import static com.kma.cdhttt.ulti.Validate.isPasswordValid;
 @Slf4j
 public class RegisterServiceImp implements RegisterService {
     private final UserRepository userRepository;
+    private final UserRoleRepository userRoleRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public RegisterServiceImp(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    public RegisterServiceImp(UserRepository userRepository, UserRoleRepository userRoleRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
+        this.userRoleRepository = userRoleRepository;
+        this.roleRepository = roleRepository;
         this.passwordEncoder = passwordEncoder;
     }
 
@@ -41,7 +49,9 @@ public class RegisterServiceImp implements RegisterService {
                 throw new KMAException(ErrorCode.BAD_REQUEST, "BAD_REQUEST");
             }
             if(!isPasswordValid(requestBody.getPassWord())){
-                throw new KMAException(ErrorCode.PASS_WORD_NOT_STRONG, "PASS_WORD_NOT_STRONG");
+                responseBody.setMessage("mật khẩu không đủ mạnh");
+                responseBody.setStatus(ErrorCode.PASS_WORD_NOT_STRONG);
+                return responseBody;
             }
             if (userRepository.existsByUserName(requestBody.getUserName())) {
                 throw new KMAException(ErrorCode.USER_EXITS, "USER_EXITS");
@@ -61,7 +71,18 @@ public class RegisterServiceImp implements RegisterService {
             user.setOtpCount("0");
             userRepository.save(user);
 
+            RoleEntity role = roleRepository.findByRoleName("USER");
+
+            UserRoleEntity userRoleEntity = new UserRoleEntity();
+            userRoleEntity.setId(UUID.randomUUID().toString());
+            userRoleEntity.setRoleId(role.getRoleId());
+            userRoleEntity.setUserId(user.getId());
+            userRoleEntity.setCreatedDate(new Timestamp(System.currentTimeMillis()));
+            userRoleEntity.setUpdateDate(new Timestamp(System.currentTimeMillis()));
+            userRoleRepository.save(userRoleEntity);
+
             responseBody.setStatus(Common.SUCCESS);
+            responseBody.setMessage("SUCCESS");
             return responseBody;
         }catch (Exception e){
             log.info("{} register Exception {}", getClass().getSimpleName(), e);

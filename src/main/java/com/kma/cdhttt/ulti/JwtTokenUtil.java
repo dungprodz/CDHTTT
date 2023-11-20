@@ -1,8 +1,14 @@
 package com.kma.cdhttt.ulti;
 
+import com.kma.cdhttt.entity.UserEntity;
+import com.kma.cdhttt.entity.UserRoleEntity;
+import com.kma.cdhttt.repository.RoleRepository;
+import com.kma.cdhttt.repository.UserRepository;
+import com.kma.cdhttt.repository.UserRoleRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
@@ -10,18 +16,28 @@ import org.springframework.stereotype.Component;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Component
 public class JwtTokenUtil implements Serializable {
     private static final long serialVersionUID = -2550185165626007488L;
-
+    private final UserRoleRepository userRoleRepository;
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     @Value("${jwt.token.expire.time}")
     private long tokenExpireTime;
 
     @Value("${jwt.secret}")
     private String secret;
+    @Autowired
+    public JwtTokenUtil(UserRoleRepository userRoleRepository, UserRepository userRepository, RoleRepository roleRepository) {
+        this.userRoleRepository = userRoleRepository;
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+    }
 
     //retrieve username from jwt token
     public String getUsernameFromToken(String token) {
@@ -51,7 +67,11 @@ public class JwtTokenUtil implements Serializable {
     //generate token for user
     public String generateToken(UserDetails userDetails) {
         Map<String, Object> claims = new HashMap<>();
-        return doGenerateToken(claims, userDetails.getUsername());
+        UserEntity user = userRepository.findAllByUserName(userDetails.getUsername());
+        List<String> roleList = userRoleRepository.findByUserId(user.getId()).stream().map(UserRoleEntity::getRoleId).collect(Collectors.toList());
+        List<String> roleName = roleList.stream().map(item->roleRepository.findByRoleId(item).getRoleName()).collect(Collectors.toList());
+        claims.put("role", roleName);
+        return doGenerateToken(claims, userDetails.getUsername(), roleList);
     }
 
     //while creating the token -
@@ -59,7 +79,7 @@ public class JwtTokenUtil implements Serializable {
     //2. Sign the JWT using the HS512 algorithm and secret key.
     //3. According to JWS Compact Serialization(https://tools.ietf.org/html/draft-ietf-jose-json-web-signature-41#section-3.1)
     //   compaction of the JWT to a URL-safe string
-    private String doGenerateToken(Map<String, Object> claims, String subject) {
+    private String doGenerateToken(Map<String, Object> claims, String subject, List<String> role) {
 
         return Jwts.builder().setClaims(claims).setSubject(subject).setIssuedAt(new Date(System.currentTimeMillis()))
                 .setExpiration(new Date(System.currentTimeMillis() + tokenExpireTime * 1000))
