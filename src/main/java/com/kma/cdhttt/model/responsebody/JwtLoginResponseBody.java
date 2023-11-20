@@ -9,8 +9,11 @@ import java.io.Serializable;
 @Builder
 public class JwtLoginResponseBody implements Serializable {
     private static final long serialVersionUID = -8091879091924046844L;
-    private String jwttoken;
-    private String refreshToken;
+    private String token;
     private String status;
 
+    public JwtLoginResponseBody(String token, String status) {
+        this.token = token;
+        this.status = status;
+    }
 }
