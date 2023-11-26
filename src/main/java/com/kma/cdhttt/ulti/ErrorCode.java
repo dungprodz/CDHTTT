@@ -7,5 +7,6 @@ public interface ErrorCode {
     String ACCESS_DENIED ="ACCESS_DENIED";
     String FORBIDDEN = "KMA_403";
     String USER_EXITS = "USER_EXITS";
+    String USER_NOT_EXITS = "USER_NOT_EXITS";
     String PASS_WORD_NOT_STRONG = "PASS_WORD_NOT_STRONG";
 }

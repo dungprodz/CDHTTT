@@ -9,6 +9,7 @@ import com.kma.cdhttt.service.impl.JwtUserDetailsService;
 import com.kma.cdhttt.ulti.Common;
 import com.kma.cdhttt.ulti.ErrorCode;
 import com.kma.cdhttt.ulti.JwtTokenUtil;
+import com.kma.cdhttt.ulti.KMAException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.sql.Timestamp;
+import java.util.Objects;
 
 @RestController
 @CrossOrigin("*")
@@ -42,7 +44,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtLoginRequestBody authenticationRequest){
+    public ResponseEntity<?> createAuthenticationToken(@RequestBody @Valid JwtLoginRequestBody authenticationRequest) throws KMAException {
         try {
             authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(authenticationRequest.getUsername(), authenticationRequest.getPassword()));
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
@@ -66,6 +68,9 @@ public class AuthenticationController {
             return ResponseEntity.ok(new JwtLoginResponseBody(token, Common.SUCCESS));
         } catch (BadCredentialsException e) {
             UserEntity user = userRepository.findAllByUserName(authenticationRequest.getUsername());
+            if(Objects.isNull(user)){
+                throw new KMAException(ErrorCode.USER_NOT_EXITS, "USER_NOT_EXITS");
+            }
             if (Integer.parseInt(user.getOtpCount()) >= 5) {
                 ErrorResponse response = new ErrorResponse();
                 response.setMessage("bạn đã đăng nhập quá 5 lần, hãy thử lại sau 30 phút");
