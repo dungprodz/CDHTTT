@@ -15,6 +15,8 @@ import com.kma.cdhttt.ulti.KMAException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -40,7 +42,7 @@ public class RegisterServiceImp implements RegisterService {
     }
 
     @Override
-    public RegisterResponseBody register(RegisterRequestBody requestBody) throws Exception {
+    public ResponseEntity<RegisterResponseBody> register(RegisterRequestBody requestBody) throws Exception {
         try {
             log.info("{} register RegisterRequestBody {}", getClass().getSimpleName(), requestBody);
             RegisterResponseBody responseBody = new RegisterResponseBody();
@@ -51,7 +53,7 @@ public class RegisterServiceImp implements RegisterService {
             if(!isPasswordValid(requestBody.getPassWord())){
                 responseBody.setMessage("mật khẩu không đủ mạnh");
                 responseBody.setStatus(ErrorCode.PASS_WORD_NOT_STRONG);
-                return responseBody;
+                return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
             }
             if (userRepository.existsByUserName(requestBody.getUserName())) {
                 throw new KMAException(ErrorCode.USER_EXITS, "USER_EXITS");
@@ -83,7 +85,7 @@ public class RegisterServiceImp implements RegisterService {
 
             responseBody.setStatus(Common.SUCCESS);
             responseBody.setMessage("SUCCESS");
-            return responseBody;
+            return new ResponseEntity<>(responseBody, HttpStatus.OK);
         }catch (Exception e){
             log.info("{} register Exception {}", getClass().getSimpleName(), e);
             throw new KMAException(ErrorCode.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR");
