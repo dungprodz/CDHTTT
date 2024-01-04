@@ -7,7 +7,6 @@ import java.util.Objects;
 @Entity
 @Table(name = "user_role")
 public class UserRoleEntity {
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Id
     @Column(name = "ID")
     private String id;

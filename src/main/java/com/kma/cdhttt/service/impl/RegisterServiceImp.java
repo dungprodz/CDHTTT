@@ -43,7 +43,6 @@ public class RegisterServiceImp implements RegisterService {
 
     @Override
     public ResponseEntity<RegisterResponseBody> register(RegisterRequestBody requestBody) throws Exception {
-        try {
             log.info("{} register RegisterRequestBody {}", getClass().getSimpleName(), requestBody);
             RegisterResponseBody responseBody = new RegisterResponseBody();
             if (StringUtils.isEmpty(requestBody.getUserName()) || StringUtils.isEmpty(requestBody.getPassWord()) || StringUtils.isEmpty(requestBody.getEmail())
@@ -86,9 +85,6 @@ public class RegisterServiceImp implements RegisterService {
             responseBody.setStatus(Common.SUCCESS);
             responseBody.setMessage("SUCCESS");
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
-        }catch (Exception e){
-            log.info("{} register Exception {}", getClass().getSimpleName(), e);
-            throw new KMAException(ErrorCode.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR");
         }
     }
-}
+
