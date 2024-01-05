@@ -43,13 +43,14 @@ public class RegisterServiceImp implements RegisterService {
 
     @Override
     public ResponseEntity<RegisterResponseBody> register(RegisterRequestBody requestBody) throws Exception {
+        try {
             log.info("{} register RegisterRequestBody {}", getClass().getSimpleName(), requestBody);
             RegisterResponseBody responseBody = new RegisterResponseBody();
             if (StringUtils.isEmpty(requestBody.getUserName()) || StringUtils.isEmpty(requestBody.getPassWord()) || StringUtils.isEmpty(requestBody.getEmail())
                     || StringUtils.isEmpty(requestBody.getPhoneNumber()) || StringUtils.isEmpty(requestBody.getFullName())) {
                 throw new KMAException(ErrorCode.BAD_REQUEST, "BAD_REQUEST");
             }
-            if(!isPasswordValid(requestBody.getPassWord())){
+            if (!isPasswordValid(requestBody.getPassWord())) {
                 responseBody.setMessage("mật khẩu không đủ mạnh");
                 responseBody.setStatus(ErrorCode.PASS_WORD_NOT_STRONG);
                 return new ResponseEntity<>(responseBody, HttpStatus.BAD_REQUEST);
@@ -85,6 +86,11 @@ public class RegisterServiceImp implements RegisterService {
             responseBody.setStatus(Common.SUCCESS);
             responseBody.setMessage("SUCCESS");
             return new ResponseEntity<>(responseBody, HttpStatus.OK);
+        } catch (KMAException ex) {
+            throw ex;
+        } catch (Exception e) {
+            throw new KMAException(ErrorCode.INTERNAL_SERVER_ERROR, "INTERNAL_SERVER_ERROR");
         }
     }
+}
 
