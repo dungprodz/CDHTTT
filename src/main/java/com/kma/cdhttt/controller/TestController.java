@@ -35,4 +35,13 @@ public class TestController {
         }
         return user;
     }
+
+    @PostMapping("/mail")
+    public List<UserEntity> findByMailWithORM(@RequestBody Injection injection) {
+        List<UserEntity> user = userRepository.findAllByEmail(injection.getEmail());
+        if(Objects.isNull(user)){
+            return null;
+        }
+        return user;
+    }
 }
