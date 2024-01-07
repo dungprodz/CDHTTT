@@ -1,0 +1,27 @@
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/ecommerce?allowPublicKeyRetrieval=true&useSSL=false
+    username: root
+    password: dungbadao2002
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+
+resilience4j.ratelimiter:
+  instances:
+    myRateLimiter:
+      limitForPeriod: 2
+      limitRefreshPeriod: 4s
+      timeoutDuration: 0
+      registerHealthIndicator: true
+      eventConsumerBufferSize: 1000
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  endpoint:
+    health:
+      show-details: always

@@ -5,6 +5,9 @@ import com.kma.cdhttt.model.requestbody.Injection;
 import com.kma.cdhttt.model.requestbody.JwtLoginRequestBody;
 import com.kma.cdhttt.repository.UserRepository;
 import com.kma.cdhttt.service.impl.UserServiceImp;
+import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -44,4 +47,18 @@ public class TestController {
         }
         return user;
     }
+    @GetMapping("/ddos")
+    @RateLimiter(name = "myRateLimiter", fallbackMethod = "fallbackMethod")
+    public String testDDos() {
+        return "SUCCESS";
+    }
+    public ResponseEntity<String> fallbackMethod(Throwable throwable){
+        return new ResponseEntity<String>("user service does not permit further calls", HttpStatus.TOO_MANY_REQUESTS);
+
+    }
+//    public String fallbackMethod(Throwable throwable) {
+//        System.out.println("Request denied due to rate limiting");
+//        return "Request denied due to rate limiting";
+//    }
+
 }
